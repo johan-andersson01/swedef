@@ -2,7 +2,7 @@
 
 swedef is a script that lets you find the definition, conjugation, and ethymology of swedish words.
 
-The script relies on the dictionaries SAOL, SAOB, and SO, available from [https://svenska.se](svenska.se).
+The script relies on the dictionaries SAOL, SAOB, and SO, available from [svenska.se](https://svenska.se).
 
 
 ## Installation
