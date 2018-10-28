@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+from bs4 import BeautifulSoup
+import requests
+import argparse 
+
+headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+base_url = 'https://svenska.se/tri/f_{}.php?sok='
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('words', type=str, nargs='+', help='Include one or more search queries')
+    parser.add_argument('-d', '--dicts', nargs='+', choices=["saol", "so", "saob"], default=["saol", "so"], help='Select which dictionaries you want to use')
+    return parser.parse_args()
+
+def print_with_margins(text, upper=True, lower=True):
+    if upper:
+        print('-'*len(text))
+    print(text)
+    if lower:
+        print('-'*len(text))
+
+def print_components(soup, name, title=None):
+    components = soup.find_all(class_=name)
+    if len(components) < 2: 
+        for c in components:
+            print(f"{title}: {c.get_text()}")
+    else:
+        print(f"{title}:")
+        for c in components:
+            print(f"{c.get_text()}")
+
+def main():
+    args = get_args()
+    for word in args.words:
+        print_with_margins(f"Sökning: {word}")
+        for i, d in enumerate(args.dicts):
+            try:
+                page = requests.get(base_url.replace('{}', args.dicts[i]) + word, headers=headers)
+            except requests.exceptions.ConnectionError as e:
+                print(f"Failed to connect to {d.upper()}")
+                continue
+
+            soup = BeautifulSoup(page.text, 'html.parser')
+            print_with_margins(f"\n{d.upper()}:", upper=False)
+
+            if page.status_code != 200:
+                print(f"Failed to fetch data from {d.upper()}")
+                continue
+
+            if d == 'saob':
+                print_components(soup, ['jamn', 'udda'])
+            else:
+                print_components(soup, ['grundform'] , 'grundform')
+                print_components(soup, ['def']       , 'defnition')
+                print_components(soup, ['uttalstext'], 'uttal')
+                print_components(soup, ['ordklass']  , 'ordklass')
+                print_components(soup, ['bojning']   , 'böjning')
+
+
+if __name__ == '__main__':
+    main()
